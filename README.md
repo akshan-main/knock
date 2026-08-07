@@ -1,6 +1,6 @@
 # KNOCK
 
-## [Try the live prototype →](https://akshan-main.github.io/knock/)
+## [Try the live prototype →](https://akshan.dev/knock/)
 
 > Your intelligence should learn your signal—not make you learn its wake word.
 
