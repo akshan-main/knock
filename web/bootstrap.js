@@ -4,6 +4,7 @@ const runtime = document.querySelector("#runtime");
 const runtimeLabel = document.querySelector("#runtime-label");
 const loadingNote = document.querySelector("#loading-note");
 const indexURL = "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/";
+const buildID = "plain-v2";
 
 async function start() {
   try {
@@ -12,13 +13,13 @@ async function start() {
     python.FS.mkdirTree("/app/manners");
 
     for (const file of ["__init__.py", "models.py", "engine.py"]) {
-      const response = await fetch(`./manners/${file}`);
+      const response = await fetch(`./manners/${file}?v=${buildID}`);
       if (!response.ok) throw new Error(`Could not load manners/${file}`);
       python.FS.writeFile(`/app/manners/${file}`, await response.text());
     }
 
     python.runPython('import sys; sys.path.insert(0, "/app")');
-    const app = await fetch("./web/app.py");
+    const app = await fetch(`./web/app.py?v=${buildID}`);
     if (!app.ok) throw new Error("Could not load the browser adapter");
     await python.runPythonAsync(await app.text());
     globalThis.mannersPython = python;
