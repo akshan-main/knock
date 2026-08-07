@@ -3,198 +3,256 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f1eee7" />
-    <link rel="icon" href="data:," />
+    <meta name="theme-color" content="#f1eadf" />
     <meta
       name="description"
-      content="When everything can interrupt you, MANNERS chooses what should—and how."
+      content="Teach a small local detector one sound, then watch it recognize the pattern live."
     />
-    <title>MANNERS — Which object should interrupt?</title>
-    <link rel="stylesheet" href="./web/styles.css?v=plain-v3" />
+    <title>KNOCK — Teach the room one sound</title>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://api.fontshare.com" />
+    <link
+      rel="stylesheet"
+      href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&amp;display=swap"
+    />
+    <link rel="stylesheet" href="./web/styles.css?v=knock-v2" />
   </head>
   <body>
-    <header class="nav">
+    <header class="site-nav">
+      <a class="plain-name" href="#top">KNOCK</a>
+      <p>One sound. Learned locally.</p>
       <a
         class="source-link"
-        href="https://github.com/akshan-main/era-manners/blob/main/manners/engine.py"
-      >view source <span aria-hidden="true">↗</span></a>
+        id="source-link"
+        href="https://github.com/akshan-main/knock"
+      >view source <span aria-hidden="true">&#8599;</span></a>
     </header>
 
     <main id="top">
-      <section class="hero">
+      <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow">One quiet system for a room full of smart objects</p>
-          <h1>When every object can speak,<em>something decides who should.</em></h1>
-          <p class="lede">
-            Weather, calendars, and assistants can all interrupt you. MANNERS
-            makes them ask first, then chooses the least disruptive way to
-            reach you—or stays silent.
-          </p>
-          <div class="hero-actions">
-            <button class="primary-button" id="hero-run" disabled>
-              see it decide
-            </button>
-            <a href="#lab">try the controls</a>
-          </div>
-          <p class="loading-note" id="loading-note">
-            Preparing the interactive example.
-          </p>
-        </div>
-        <div class="hero-field" aria-hidden="true">
-          <div class="attention-orbit orbit-one"></div>
-          <div class="attention-orbit orbit-two"></div>
-          <div class="attention-core"><span>1</span><small>attention<br />slot</small></div>
-          <span class="agent-dot dot-weather">weather</span>
-          <span class="agent-dot dot-calendar">calendar</span>
-          <span class="agent-dot dot-social">social</span>
-          <p>silence is a valid output</p>
-        </div>
-      </section>
-
-      <section class="lab" id="lab" data-route="silence" data-ready="false" aria-busy="true">
-        <div class="lab-header">
-          <div>
-            <p class="eyebrow">Try a real moment</p>
-            <h2>Three things want your attention. What should happen?</h2>
-          </div>
-          <div class="lab-actions">
-            <div class="runtime" id="runtime" role="status">
-              <span></span><b id="runtime-label">starting the demo</b>
-            </div>
-            <button class="scene-button" id="run-scene" disabled>run the example</button>
-          </div>
-        </div>
-
-        <div class="context-bar">
-          <span>Change the situation</span>
-          <button id="toggle-doorway" aria-pressed="true" disabled>
-            <i></i>At doorway
-          </button>
-          <button id="toggle-hands" aria-pressed="true" disabled>
-            <i></i>Hands full
-          </button>
-          <button id="toggle-asleep" aria-pressed="true" disabled>
-            <i></i>Partner asleep
-          </button>
-          <button id="toggle-attention" aria-pressed="true" disabled>
-            <i></i>Attention available
-          </button>
-          <small>Turn a detail on or off. The result updates instantly.</small>
-        </div>
-
-        <div class="scenario-grid">
-          <section class="proposal-column" aria-label="Things asking for attention">
-            <div class="column-title"><span>what wants your attention</span><b>3 requests</b></div>
-            <article class="proposal" id="proposal-weather" data-outcome="waiting">
-              <div class="proposal-top"><span>Weather</span><b>0.78</b></div>
-              <h3>Rain starts in 12 minutes.</h3>
-              <p>Leaving context required</p>
-              <strong class="outcome" id="outcome-weather">STARTING</strong>
-            </article>
-            <article class="proposal" id="proposal-calendar" data-outcome="waiting">
-              <div class="proposal-top"><span>Calendar</span><b>0.62</b></div>
-              <h3>Design review begins in 25 minutes.</h3>
-              <p>Personal / work</p>
-              <strong class="outcome" id="outcome-calendar">STARTING</strong>
-            </article>
-            <article class="proposal" id="proposal-social" data-outcome="waiting">
-              <div class="proposal-top"><span>Messages</span><b>0.16</b></div>
-              <h3>Maya sent three photos.</h3>
-              <p>Personal / non-urgent</p>
-              <strong class="outcome" id="outcome-social">STARTING</strong>
-            </article>
-          </section>
-
-          <section class="arbiter-column" aria-label="How MANNERS chooses">
-            <div class="path-entry path-a"></div>
-            <div class="path-entry path-b"></div>
-            <div class="path-entry path-c"></div>
-            <div class="kernel-node">
-              <span>compares<br />all three</span>
-              <b>POLICY</b>
-              <small>check → compare → choose</small>
-            </div>
-            <div class="attention-budget" id="attention-budget" data-open="true">
-              <span></span><b id="attention-budget-label">one interruption allowed</b>
-            </div>
-          </section>
-
-          <section class="object-column" aria-label="Available physical objects">
-            <div class="column-title"><span>where it can happen</span><b>3 nearby objects</b></div>
-            <article class="device" id="object-charm" data-selected="false">
-              <div class="device-visual charm-visual"><i></i><b></b></div>
-              <div><h3>Door charm</h3><p>doorway · quiet glow</p></div>
-              <span class="route-state" id="route-charm">starting</span>
-            </article>
-            <article class="device" id="object-pin" data-selected="false">
-              <div class="device-visual pin-visual"><i></i><b></b></div>
-              <div><h3>Worn pin</h3><p>private · haptic</p></div>
-              <span class="route-state" id="route-pin">starting</span>
-            </article>
-            <article class="device" id="object-speaker" data-selected="false">
-              <div class="device-visual speaker-visual"><i></i><b></b></div>
-              <div><h3>Hall speaker</h3><p>public · speech</p></div>
-              <span class="route-state" id="route-speaker">starting</span>
-            </article>
-          </section>
-
-          <aside class="receipt" aria-live="polite">
-            <div class="receipt-top"><span>What happens now</span><b id="decision-kind">STARTING</b></div>
-            <p class="receipt-agent" id="decision-agent">PREPARING THE EXAMPLE</p>
-            <h3 id="decision-cue">One moment.</h3>
-            <p class="receipt-reason" id="decision-reason">
-              The result will appear when the interactive example is ready.
+          <p class="kicker">A personal sound detector, trained in this tab</p>
+          <h1 id="hero-title">
+            <span>TEACH A DETECTOR</span>
+            <span>
+              YOUR
+              <span class="inline-wave" aria-hidden="true">
+                <svg viewBox="0 0 190 54" role="presentation">
+                  <path d="M3 28h19l8-13 12 29 13-39 13 43 12-31 11 21 10-10h18l8-16 11 31 14-23 11 8h26" />
+                </svg>
+              </span>
+              KNOCK.
+            </span>
+          </h1>
+          <div class="hero-bottom">
+            <p class="hero-deck">
+              Give the microphone three examples. A tiny Python model builds a
+              sound profile, compares live audio against it, and emits an event
+              when your pattern returns. No transcription. No upload.
             </p>
-            <p class="quiet-note" id="quiet-note">The other objects stay quiet.</p>
-          </aside>
+            <div class="hero-action">
+              <button class="mic-button" id="enable-mic" type="button" disabled>
+                <span class="mic-button-dot" aria-hidden="true"></span>
+                use my microphone
+              </button>
+              <span class="mic-state" id="mic-state" aria-live="polite">microphone is off</span>
+            </div>
+          </div>
         </div>
 
-        <details class="trace-panel" id="trace-panel">
-          <summary>
-            <span>See why it chose this</span>
-            <small>scores and rules</small>
-          </summary>
-          <div class="trace-body">
-            <div>
-              <h3>Why this?</h3>
-              <ul id="decision-facts"></ul>
-              <div class="receipt-score trace-score">
-                <span>match for this moment</span><strong id="decision-score">0.000</strong>
-                <div><i id="score-fill"></i><b></b></div>
-                <small>minimum to respond 0.58</small>
-              </div>
-              <dl class="breakdown" id="score-breakdown"></dl>
-            </div>
-            <div>
-              <h3>Why not the others?</h3>
-              <ul id="rejection-facts"></ul>
-            </div>
-            <pre id="raw-trace"></pre>
+        <div class="hero-signal" aria-hidden="true">
+          <div class="signal-disc">
+            <i></i><i></i><i></i><i></i><i></i>
           </div>
-        </details>
+          <p>sound in<br />event out</p>
+        </div>
       </section>
 
-      <section class="thesis">
-        <p class="eyebrow">The rule behind it</p>
-        <h2>Every object asks.<br />One system answers.</h2>
-        <p>
-          Without a shared decision, every smart object becomes another
-          notification. MANNERS gives the whole room one set of manners.
-        </p>
-        <div class="thesis-grid">
-          <article><span>Respect</span><h3>Read the room first.</h3><p>Who is present, what is private, and whether this is a good moment come before urgency.</p></article>
-          <article><span>Choose</span><h3>Use the gentlest object.</h3><p>A quiet glow, a private tap, or speech is chosen to fit the moment.</p></article>
-          <article><span>Wait</span><h3>Silence is useful.</h3><p>If nothing deserves attention—or attention is unavailable—nothing interrupts.</p></article>
+      <section class="microphone-lab" id="lab" aria-labelledby="lab-title">
+        <header class="lab-intro">
+          <div>
+            <p class="kicker">The working loop</p>
+            <h2 id="lab-title">Make the sound.<br />Let Python learn its shape.</h2>
+          </div>
+          <p class="runtime-label" id="runtime-label" role="status" aria-live="polite">
+            loading local Python
+          </p>
+        </header>
+
+        <div class="lab-bento">
+          <article class="trainer-panel bento-panel">
+            <header class="panel-heading">
+              <div>
+                <p>Train</p>
+                <h3>Three examples<br />become one profile.</h3>
+              </div>
+              <span>three takes</span>
+            </header>
+
+            <p class="trainer-instruction" id="trainer-instruction">
+              Enable the microphone, then make the same short sound three times.
+            </p>
+
+            <div class="calibration" aria-label="Training progress">
+              <div class="calibration-meta">
+                <span>capture window</span>
+                <strong>room calibration / recording</strong>
+              </div>
+              <div
+                class="calibrate-progress"
+                id="calibrate-progress"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+                aria-label="Audio capture progress"
+              ><span></span></div>
+            </div>
+
+            <div class="examples" id="examples" aria-label="Recorded examples">
+              <article class="example-card" id="example-1" data-state="empty">
+                <span>example 1</span>
+                <div class="mini-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <strong>waiting</strong>
+              </article>
+              <article class="example-card" id="example-2" data-state="empty">
+                <span>example 2</span>
+                <div class="mini-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <strong>waiting</strong>
+              </article>
+              <article class="example-card" id="example-3" data-state="empty">
+                <span>example 3</span>
+                <div class="mini-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                <strong>waiting</strong>
+              </article>
+            </div>
+
+            <div class="trainer-actions">
+              <button class="record-button" id="record-example" type="button" disabled>
+                record example
+              </button>
+              <button class="reset-button" id="reset-profile" type="button" disabled>
+                reset profile
+              </button>
+            </div>
+
+            <p class="persistence-note" id="persistence-note">
+              Only the learned profile can stay in this browser. Reset removes it.
+            </p>
+          </article>
+
+          <article class="detector-panel bento-panel">
+            <header class="panel-heading detector-heading">
+              <div>
+                <p>Listen</p>
+                <h3>Live distance<br />from your sound.</h3>
+              </div>
+              <span class="live-state" id="live-state" data-state="idle">not listening</span>
+            </header>
+
+            <div class="waveform-shell">
+              <canvas
+                id="waveform"
+                width="960"
+                height="320"
+                aria-label="Live microphone waveform"
+              ></canvas>
+              <div class="waveform-axis" aria-hidden="true"><span></span><span></span><span></span></div>
+              <p>live signal</p>
+            </div>
+
+            <dl class="live-readout" aria-label="Live detector readings">
+              <div>
+                <dt>match</dt>
+                <dd id="live-confidence">—</dd>
+              </div>
+              <div>
+                <dt>distance</dt>
+                <dd id="live-distance">—</dd>
+              </div>
+              <div>
+                <dt>threshold</dt>
+                <dd id="live-threshold">—</dd>
+              </div>
+              <div>
+                <dt>latency</dt>
+                <dd id="live-latency">—</dd>
+              </div>
+            </dl>
+
+            <div class="event-section">
+              <div class="event-title">
+                <span>detected events</span>
+                <small>newest first</small>
+              </div>
+              <ol class="event-log" id="event-log" aria-live="polite">
+                <li class="empty-event">Your matched sounds will appear here.</li>
+              </ol>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="signal-marquee" aria-label="How the detector handles audio">
+        <div class="marquee-track">
+          <span>LOCAL AUDIO ONLY</span><i></i>
+          <span>THREE EXAMPLES</span><i></i>
+          <span>DISTANCE, NOT TRANSCRIPTION</span><i></i>
+          <span>ONE MATCH EVENT</span><i></i>
+          <span>NO AUDIO UPLOAD</span><i></i>
+          <span aria-hidden="true">LOCAL AUDIO ONLY</span><i aria-hidden="true"></i>
+          <span aria-hidden="true">THREE EXAMPLES</span><i aria-hidden="true"></i>
+          <span aria-hidden="true">DISTANCE, NOT TRANSCRIPTION</span><i aria-hidden="true"></i>
+          <span aria-hidden="true">ONE MATCH EVENT</span><i aria-hidden="true"></i>
+          <span aria-hidden="true">NO AUDIO UPLOAD</span><i aria-hidden="true"></i>
+        </div>
+      </section>
+
+      <section class="technical" aria-labelledby="technical-title">
+        <div class="technical-intro">
+          <p class="kicker">Small enough to inspect</p>
+          <h2 id="technical-title">The whole loop,<br />without a black box.</h2>
+          <p>
+            KNOCK learns a compact signature from the sound envelope. It does
+            not need words, identity, or a remote model to recognize the pattern.
+          </p>
+        </div>
+
+        <div class="technical-accordions" id="technical-accordions">
+          <details open>
+            <summary><span>Learn</span><b aria-hidden="true">+</b></summary>
+            <div>
+              <h3>Extract the rhythm behind each take.</h3>
+              <p>Each example becomes onset count, tempo-normalized intervals, relative hit strength, and compact spectral shape.</p>
+            </div>
+          </details>
+          <details>
+            <summary><span>Compare</span><b aria-hidden="true">+</b></summary>
+            <div>
+              <h3>Measure shape, not meaning.</h3>
+              <p>Dynamic-time-warped feature distance compares a live motif with the two nearest learned examples.</p>
+            </div>
+          </details>
+          <details>
+            <summary><span>Emit</span><b aria-hidden="true">+</b></summary>
+            <div>
+              <h3>Cross the threshold once.</h3>
+              <p>A match produces a bounded event that another local behavior can consume without receiving raw audio.</p>
+            </div>
+          </details>
         </div>
       </section>
     </main>
 
-    <footer>
-      <div><span>A small experiment in quieter intelligence.</span></div>
-      <a href="https://github.com/akshan-main/era-manners#readme">view code and technical notes <span aria-hidden="true">↗</span></a>
+    <footer class="site-footer">
+      <p>KNOCK</p>
+      <h2>Teach one sound.<br />Keep the audio close.</h2>
+      <a href="https://github.com/akshan-main/knock">read the Python <span aria-hidden="true">&#8599;</span></a>
     </footer>
 
-    <noscript>This demo needs JavaScript to start the in-browser Python runtime.</noscript>
-    <script type="module" src="./web/bootstrap.js?v=plain-v2"></script>
+    <noscript>KNOCK needs JavaScript to request microphone access and start local Python.</noscript>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+    <script type="module" src="./web/bootstrap.js?v=knock-v2"></script>
   </body>
 </html>

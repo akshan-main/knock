@@ -1,131 +1,100 @@
-# MANNERS
+# KNOCK
 
-## [Open the live demo →](https://akshan-main.github.io/era-manners/)
+## [Try the live prototype →](https://akshan-main.github.io/knock/)
 
-> When every object can speak, something decides who should.
+> Your intelligence should learn your signal—not make you learn its wake word.
 
-MANNERS is an attention scheduler for intelligent physical objects. Agents do
-not address a person directly; they submit typed proposals to a shared kernel.
-MANNERS decides which proposal may act, which object may carry it, and when the
-right decision is silence.
+KNOCK learns a short percussive signal from three examples through your actual
+microphone. Teach it a desk knock, clap, or finger-snap pattern; repeat the
+pattern at a different volume or tempo; KNOCK emits a typed event when the live
+audio matches and stays silent when it does not.
 
-It treats human attention like an operating-system resource: scarce,
-contextual, private, and owned by the person.
+There is no scripted assistant response or simulated object. The implemented
+boundary is deliberately smaller: turn a personal acoustic gesture into a
+reusable input event for an AI operating system.
 
-## The 60-second scene
+## Try it in 60 seconds
 
-It is 08:00. A person is at the doorway with both hands full. Their partner is
-asleep, and only one object may spend attention.
+1. Allow microphone access and remain quiet while KNOCK measures the room.
+2. Perform the same 2–6 hit pattern three times.
+3. Repeat it slightly faster, slower, softer, or louder.
+4. Try ordinary speech or a different rhythm as a negative.
 
-| Agent proposal | MANNERS decision | Reason |
-| --- | --- | --- |
-| Weather: “Rain starts in 12 minutes” | `ACT` through the door charm's quiet glow | Urgent, relevant, and useful at the doorway |
-| Calendar: “Design review in 25 minutes” | `DEFER` | Valuable, but weather won the single attention slot |
-| Social: “Maya sent three photos” | `DROP` | Not valuable enough to interrupt now |
+The page shows the live match score, learned threshold, decision latency, and
+event log. The result is not known in advance: the profile is fitted in your
+browser from the sound you choose after the page loads.
 
-Every speech route is rejected because the home must stay quiet. Change that
-one fact and the same weather proposal moves to the hall speaker. Move away
-from the doorway and weather waits while the calendar wins through a worn
-pin's haptic output.
-
-Close the `Attention open` gate and every otherwise valid proposal is held:
-the kernel returns `SILENCE` and no object receives a route.
-
-The demo shows the answer to four questions: **why this, why now, why this
-object, and why not the others?**
-
-## The OS primitive
-
-Individual agents have local goals. They do not have a complete view of the
-person, the room, or every other agent asking to act. MANNERS is the shared
-policy boundary they cannot bypass:
+## What runs
 
 ```text
-Proposal[] + Context + Device[]
-              ↓
-    principal / expiry / privacy / context gates
-              ↓
-       proposal × device × modality scoring
-              ↓
-         shared attention budget
-              ↓
-        ACT / DEFER / DROP / SILENCE
+microphone PCM
+    → adaptive room calibration
+    → robust conditioning + RMS onset detection
+    → interval-ratio + relative-amplitude features
+    → three-example template set + pairwise-calibrated threshold
+    → dynamic-time-warped feature distance + unknown rejection
+    → silence closure + duplicate cooldown
+    → PersonalSignalDetected(score, latency_ms)
 ```
 
-This is not a notification dashboard. It is closer to a process scheduler:
-agents request attention instead of taking it, physical objects expose output
-capabilities, and the kernel admits one safe action or none.
+The browser's AudioWorklet buffers microphone frames. CPython runs in the page
+through Pyodide; NumPy-backed feature extraction, profile learning, threshold
+calibration, and streaming decisions remain in Python. The JavaScript surface
+provides browser audio, runtime bootstrapping, and presentation; it does not
+implement learning or recognition.
 
-## Python architecture
+Raw microphone samples stay in the current browser session and are not stored.
+Only the learned numeric profile may persist in local storage, where reset can
+remove it. KNOCK has no audio upload endpoint, backend, model API, Node project,
+or TypeScript build.
 
-All policy and interaction logic is Python 3.11+ with no application
-dependencies:
+## Architecture
 
 ```text
-manners/
-  models.py       proposals, context, devices, routes, outcomes
-  engine.py       hard gates, scoring, arbitration, audit
-  demo.py         deterministic three-context walkthrough
-tests/
-  test_engine.py  thirteen policy, determinism, and privacy tests
-web/
-  app.py          Python DOM adapter for the live page
-  bootstrap.js    loads pinned CPython/WebAssembly; no policy logic
-index.html        static GitHub Pages shell
+knock/audio.py     PCM conditioning and onset extraction
+knock/features.py  tempo- and amplitude-normalized motif descriptors
+knock/learner.py   template fitting, consistency, distance, threshold
+knock/detector.py  streaming closure, decisions, and cooldown
+web/app.py         Python adapter between the page and the detector
+web/bootstrap.js   pinned Pyodide loader
+web/audio-worklet.js
+                   microphone capture and PCM buffering
+index.html         static GitHub Pages shell
+web/styles.css     interaction and responsive layout
 ```
 
-The public page loads the repository's `manners` package into Pyodide and runs
-the same engine as the native tests. There is no server, JavaScript policy
-copy, model API key, Node project, or TypeScript build.
+The public prototype is a static site. To serve it locally:
 
 ```bash
-python3 -m manners.demo --fast
-python3 -m unittest discover -v
+python3 -m pip install -e .
+python3 -m http.server 8000
 ```
 
-## Decisions are inspectable
+Then open `http://localhost:8000`. Microphone access requires a secure browser
+context; `localhost` and the HTTPS GitHub Pages deployment both qualify.
 
-MANNERS first rejects routes that violate hard constraints: wrong principal,
-expiry, missing required context, offline objects, disallowed modalities,
-excessive audience, or quiet-home policy. It then scores legal routes from
-urgency, relevance, location fit, modality fit, and interruption cost.
+## Why this belongs in an AI OS
 
-The decision trace records policy facts, scores, rejected routes, and reason
-codes, but deliberately omits proposal cue content.
+An operating system for physical intelligence needs to convert continuous,
+noisy sensor streams into bounded events that higher-level agents can consume.
+KNOCK explores one such primitive: a private input vocabulary learned from its
+owner instead of selected from a fixed catalog.
 
-The tests verify that:
-
-- a quiet departure selects the co-located door charm;
-- waking the home reroutes the action to speech;
-- leaving the doorway gates weather and lets calendar win;
-- quiet-home policy blocks every speech route;
-- personal content never widens to a public speaker;
-- one attention slot produces exactly one action;
-- a closed attention budget produces silence;
-- cross-principal, expired, and unsafe proposals cannot route; and
-- persisted audit traces contain no cue text or human-context fields;
-- duplicate identities cannot corrupt proposal-to-route selection; and
-- unbounded, unknown, or timezone-naive policy inputs are rejected.
-
-## Why Era
-
-[Era](https://era.world/) is building an intelligence layer through which
-physical objects can listen, think, speak, act, and remember. Once many chosen
-objects have agency, coordination becomes part of the operating system.
-
-MANNERS explores that layer: intelligence that is coherent across objects,
-socially aware in a room, and quiet enough to disappear when it has nothing
-worth saying.
+This is relevant to [Era's](https://era.world/) work on an intelligence layer
+through which chosen physical objects can listen, think, speak, act, and
+remember. KNOCK focuses only on the listening boundary and makes no claim of
+running on Era hardware.
 
 ## Honest limits
 
-MANNERS is an independent prototype, not an Era integration. Proposals,
-devices, and physical context are simulated. The scorer is deterministic and
-hand-tuned; it has not learned a person's interruptibility from longitudinal
-behavior. This version handles one principal and one arbitration tick, with no
-real sensor transport, durable queue, device authentication, or hardware
-actuation. MANNERS governs proposals produced upstream; it does not generate
-them with an LLM.
+KNOCK is an independent browser prototype, not a hardware integration. It is
+optimized for short, separated percussive motifs in the room where training
+occurs; it is not general sound recognition, speech recognition, speaker
+identification, authentication, or a secure acoustic password. Three examples
+cannot cover microphones, rooms, users, and noise conditions encountered in
+production. Pyodide also adds latency and startup cost that an embedded
+implementation would not have.
 
-Those constraints are intentional for this submission: the implemented claim
-is small and testable—**objects propose; policy decides; at most one acts.**
+The narrow claim is the one the live page lets you verify: **teach a new
+percussive pattern locally, then recognize or reject subsequent microphone
+input against what was just learned.**

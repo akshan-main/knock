@@ -3,17 +3,14 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "era-manners"
+name = "knock-signal"
 version = "0.1.0"
-description = "Attention arbitration and non-intrusive routing for intelligent objects."
+description = "Local few-shot learning for personal percussive signals."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Akshan Krithick" }]
-dependencies = []
-
-[project.scripts]
-manners-demo = "manners.demo:main"
+dependencies = ["numpy>=1.24,<3"]
 
 [tool.setuptools]
-packages = ["manners"]
+packages = ["knock"]

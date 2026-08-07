@@ -1,313 +1,362 @@
-"""Thin browser adapter for the same MANNERS kernel exercised by native tests."""
+"""Browser adapter for KNOCK's local few-shot acoustic learner."""
 
 from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime, timezone
+import time
 
-from js import document
+import numpy as np
+from js import document, window
 from pyodide.ffi import create_proxy
 
-from manners import Context, DecisionKind, MannersEngine, demo_devices, demo_proposals
+from knock import KnockEngine
 
 
-NOW = datetime(2026, 8, 8, 8, 0, tzinfo=timezone.utc)
-PROPOSALS = demo_proposals(NOW)
-DEVICES = demo_devices()
+PROFILE_KEY = "knock-profile-v1"
+CALIBRATION_SECONDS = 1.8
+CAPTURE_SECONDS = 2.8
 
-engine = MannersEngine()
-state = {
-    "at_doorway": True,
-    "hands_full": True,
-    "partner_asleep": True,
-    "attention_open": True,
-}
-automatic = False
+engine: KnockEngine | None = None
+mode = "idle"
+capture_chunks: list[np.ndarray] = []
+capture_started = 0.0
+example_count = 0
 proxies = []
 
-PROPOSAL_NAMES = {
-    "weather": "Weather",
-    "calendar": "Calendar",
-    "social": "Social",
-}
-DEVICE_NAMES = {
-    "door_charm": "Door charm",
-    "worn_pin": "Worn pin",
-    "hall_speaker": "Hall speaker",
-}
-DEVICE_ELEMENTS = {
-    "door_charm": "object-charm",
-    "worn_pin": "object-pin",
-    "hall_speaker": "object-speaker",
-}
-ROUTE_ELEMENTS = {
-    "door_charm": "route-charm",
-    "worn_pin": "route-pin",
-    "hall_speaker": "route-speaker",
-}
-TOGGLE_ELEMENTS = {
-    "at_doorway": "toggle-doorway",
-    "hands_full": "toggle-hands",
-    "partner_asleep": "toggle-asleep",
-    "attention_open": "toggle-attention",
-}
-OUTCOME_LABELS = {"act": "CHOSEN", "defer": "WAIT", "drop": "SKIP"}
-REASON_LABELS = {
-    "QUIET_HOME_CONSTRAINT": "would wake your partner",
-    "AUDIENCE_TOO_WIDE": "would share personal information aloud",
-    "MODALITY_NOT_ALLOWED": "cannot carry this kind of message",
-    "REQUIRED_CONTEXT_MISSING": "only matters while you are leaving",
-    "BELOW_ACTION_THRESHOLD": "not important enough right now",
-    "HIGHER_VALUE_PROPOSAL_WON": "another message is more useful right now",
-    "HIGHEST_CONTEXTUAL_VALUE": "best fit for this moment",
-    "ATTENTION_BUDGET_CLOSED": "attention is unavailable",
-}
 
-
-def element(element_id):
+def element(element_id: str):
     return document.getElementById(element_id)
 
 
-def bind(element_id, event_name, handler):
+def set_text(element_id: str, value: str) -> None:
+    target = element(element_id)
+    if target is not None:
+        target.textContent = value
+
+
+def set_disabled(element_id: str, disabled: bool) -> None:
+    target = element(element_id)
+    if target is not None:
+        target.disabled = disabled
+
+
+def set_progress(value: float) -> None:
+    target = element("calibrate-progress")
+    if target is not None:
+        bounded = max(0.0, min(1.0, value))
+        fill = target.querySelector("span")
+        if fill is not None:
+            fill.style.width = f"{bounded * 100:.1f}%"
+        target.setAttribute("aria-valuenow", f"{bounded * 100:.0f}")
+
+
+def bind(element_id: str, event_name: str, handler) -> None:
+    target = element(element_id)
+    if target is None:
+        return
     proxy = create_proxy(handler)
     proxies.append(proxy)
-    element(element_id).addEventListener(event_name, proxy)
+    target.addEventListener(event_name, proxy)
 
 
-def set_text(element_id, value):
-    element(element_id).textContent = value
+def frame_to_numpy(frame) -> np.ndarray:
+    values = frame.to_py() if hasattr(frame, "to_py") else frame
+    try:
+        return np.frombuffer(values, dtype=np.float32).copy()
+    except (TypeError, ValueError):
+        return np.asarray(values, dtype=np.float32).reshape(-1).copy()
 
 
-def replace_list(element_id, lines):
-    target = element(element_id)
-    target.replaceChildren()
-    for line in lines:
-        item = document.createElement("li")
-        item.textContent = line
-        target.appendChild(item)
-
-
-def current_context():
-    return Context(
-        at_doorway=state["at_doorway"],
-        hands_full=state["hands_full"],
-        partner_asleep=state["partner_asleep"],
-        attention_budget=int(state["attention_open"]),
-    )
-
-
-def render_toggles():
-    for key, element_id in TOGGLE_ELEMENTS.items():
-        target = element(element_id)
-        target.setAttribute("aria-pressed", str(state[key]).lower())
-        target.disabled = automatic
-    budget = element("attention-budget")
-    budget.dataset.open = str(state["attention_open"]).lower()
-    set_text(
-        "attention-budget-label",
-        "one interruption allowed" if state["attention_open"] else "no interruptions allowed",
-    )
-
-
-def render_outcomes(decision):
-    for outcome in decision.outcomes:
-        card = element(f"proposal-{outcome.proposal_id}")
-        card.dataset.outcome = outcome.kind.value
-        set_text(f"outcome-{outcome.proposal_id}", OUTCOME_LABELS[outcome.kind.value])
-
-
-def route_statuses(decision):
-    if decision.proposal_id is None:
-        return {device.id: "waiting" for device in DEVICES}
-    result = {device.id: "not chosen" for device in DEVICES}
-    for rejection in decision.rejected_routes:
-        if rejection.proposal_id != decision.proposal_id:
-            continue
-        label = REASON_LABELS.get(rejection.reason_code, rejection.reason_code.lower().replace("_", " "))
-        result[rejection.device_id] = label
-    if decision.device_id:
-        result[decision.device_id] = "will respond"
-    return result
-
-
-def render_devices(decision):
-    statuses = route_statuses(decision)
-    for device_id, element_id in DEVICE_ELEMENTS.items():
-        target = element(element_id)
-        selected = device_id == decision.device_id
-        target.dataset.selected = str(selected).lower()
-        set_text(ROUTE_ELEMENTS[device_id], statuses[device_id])
-
-
-def render_breakdown(decision):
-    target = element("score-breakdown")
-    target.replaceChildren()
-    if not decision.score_breakdown:
+def set_example_state(index: int, state: str) -> None:
+    card = element(f"example-{index}")
+    if card is None:
         return
-    for name, value in decision.score_breakdown.items():
-        term = document.createElement("dt")
-        term.textContent = name.replace("_", " ")
-        amount = document.createElement("dd")
-        amount.textContent = f"{value:+.3f}"
-        target.appendChild(term)
-        target.appendChild(amount)
+    card.dataset.state = state
+    label = card.querySelector("strong")
+    if label is not None:
+        label.textContent = {
+            "empty": "waiting",
+            "recording": "listening",
+            "recorded": "learned",
+        }.get(state, state)
 
 
-def render_trace(decision):
-    outcome_facts = []
-    for outcome in decision.outcomes:
-        label = PROPOSAL_NAMES[outcome.proposal_id]
-        outcome_facts.append(
-            f"{label}: {OUTCOME_LABELS[outcome.kind.value].lower()} — "
-            f"{REASON_LABELS.get(outcome.reason_code, outcome.reason.lower())}."
-        )
-
-    rejection_facts = []
-    seen = set()
-    rejected_devices = set()
-    for rejection in decision.rejected_routes:
-        if rejection.proposal_id != decision.proposal_id:
-            continue
-        if rejection.device_id == decision.device_id:
-            continue
-        key = (rejection.device_id, rejection.reason_code)
-        if key in seen:
-            continue
-        seen.add(key)
-        rejection_facts.append(
-            f"{DEVICE_NAMES[rejection.device_id]}: "
-            f"{REASON_LABELS.get(rejection.reason_code, rejection.reason_code.lower())}."
-        )
-        rejected_devices.add(rejection.device_id)
-    if decision.proposal_id:
-        for device in DEVICES:
-            if device.id != decision.device_id and device.id not in rejected_devices:
-                rejection_facts.append(f"{device.name}: it could work, but another object fits better.")
-    elif not rejection_facts:
-        rejection_facts.append("Attention is unavailable, so every object waits.")
-
-    replace_list("decision-facts", outcome_facts)
-    replace_list("rejection-facts", rejection_facts[:5])
-    set_text("raw-trace", json.dumps(decision.trace(), indent=2))
+def reset_example_cards() -> None:
+    examples = element("examples")
+    if examples is not None:
+        examples.dataset.count = "0"
+    for index in range(1, 4):
+        set_example_state(index, "empty")
 
 
-def render_decision():
-    decision = engine.arbitrate(PROPOSALS, DEVICES, current_context(), now=NOW)
-    render_toggles()
-    render_outcomes(decision)
-    render_devices(decision)
-    render_breakdown(decision)
-    render_trace(decision)
+def update_training_ui() -> None:
+    examples = element("examples")
+    if examples is not None:
+        examples.dataset.count = str(example_count)
 
-    lab = element("lab")
-    lab.dataset.ready = "true"
-    lab.setAttribute("aria-busy", "false")
-    lab.dataset.route = decision.device_id or "silence"
-    lab.classList.remove("decision-shift")
-    _ = lab.offsetWidth
-    lab.classList.add("decision-shift")
-
-    if decision.kind is DecisionKind.ACT:
-        proposal = PROPOSAL_NAMES[decision.proposal_id]
-        device = DEVICE_NAMES[decision.device_id]
-        set_text("decision-kind", "ONE OBJECT RESPONDS")
-        set_text("decision-agent", f"{proposal.upper()} · {device.upper()}")
-        if decision.modality == "glow":
-            cue = "Two quiet blue pulses."
-        elif decision.modality == "haptic":
-            cue = "One private haptic tap."
-        else:
-            cue = f'“{decision.cue}.”'
-        set_text("decision-cue", cue)
-        if decision.proposal_id == "weather" and decision.device_id == "door_charm":
-            reason = (
-                "Rain matters as you leave. The door charm can remind you quietly "
-                "while your partner sleeps."
-            )
-        elif decision.proposal_id == "weather":
-            reason = "Your hands are full and the room is awake, so speech is the easiest option."
-        else:
-            reason = (
-                "The rain reminder no longer applies. Your calendar reminder moves "
-                "to the private pin you are wearing."
-            )
-        set_text("decision-reason", reason)
-        set_text("quiet-note", "The other objects stay quiet.")
+    if engine is not None and engine.ready:
+        set_text("trainer-instruction", "Learned locally. Repeat your signal, then try to fool it with another sound.")
+        set_text("record-example", "signal learned")
+        set_disabled("record-example", True)
+        set_text("live-state", "listening for your signal")
+        set_text("persistence-note", "The learned profile is saved in this browser. Raw audio is not stored.")
     else:
-        set_text("decision-kind", "NO INTERRUPTION")
-        set_text("decision-agent", "EVERY REQUEST WAITS")
-        set_text("decision-cue", "The world stays quiet.")
+        next_number = min(3, example_count + 1)
         set_text(
-            "decision-reason",
-            "Attention is unavailable, so nothing is allowed to interrupt you.",
+            "trainer-instruction",
+            "Make the same short 2–6 hit knock, clap, or snap pattern inside each recording.",
         )
-        set_text("quiet-note", "No object responds.")
-
-    set_text("decision-score", f"{decision.score:.3f}")
-    element("score-fill").style.width = f"{decision.score * 100:.1f}%"
-    return decision
+        set_text("record-example", f"record example {next_number} of 3")
+        set_disabled("record-example", mode not in {"training", "idle"})
+        set_text("live-state", "waiting for three examples")
 
 
-def toggle_context(key):
-    def handler(_event=None):
-        if automatic:
-            return
-        state[key] = not state[key]
-        render_decision()
-
-    return handler
-
-
-def reset_scene():
-    state.update(
-        at_doorway=True,
-        hands_full=True,
-        partner_asleep=True,
-        attention_open=True,
-    )
-    render_decision()
+def render_profile() -> None:
+    if engine is None:
+        return
+    profile = engine.export_profile()
+    threshold = float(profile.get("threshold", 0.0) or 0.0)
+    set_text("live-threshold", f"{threshold:.3f}" if threshold else "not set")
+    set_text("live-distance", "—")
+    set_text("live-confidence", "—")
+    set_text("live-latency", "—")
 
 
-async def play_scene():
-    global automatic
-    automatic = True
-    element("hero-run").disabled = True
-    element("run-scene").disabled = True
-    reset_scene()
-    element("lab").scrollIntoView({"behavior": "smooth", "block": "start"})
-    await asyncio.sleep(2.6)
-    state["partner_asleep"] = False
-    render_decision()
-    await asyncio.sleep(2.6)
-    state["at_doorway"] = False
-    render_decision()
-    await asyncio.sleep(2.6)
-    state["attention_open"] = False
-    render_decision()
-    await asyncio.sleep(2.4)
-    state.update(at_doorway=True, partner_asleep=True, attention_open=True)
-    render_decision()
-    await asyncio.sleep(1.0)
-    automatic = False
-    render_toggles()
-    element("hero-run").disabled = False
-    element("run-scene").disabled = False
+def append_event(result: dict) -> None:
+    target = element("event-log")
+    if target is None:
+        return
+    empty = target.querySelector(".empty-event")
+    if empty is not None:
+        empty.remove()
+    item = document.createElement("li")
+    moment = time.strftime("%H:%M:%S")
+    name = document.createElement("span")
+    score = document.createElement("strong")
+    name.textContent = f"{moment}  PersonalSignalDetected"
+    score.textContent = f"{result['confidence']:.0%}"
+    item.appendChild(name)
+    item.appendChild(score)
+    target.prepend(item)
+    while target.children.length > 5:
+        target.removeChild(target.lastElementChild)
 
 
-def start_scene(_event=None):
-    asyncio.create_task(play_scene())
+async def clear_detection_pulse() -> None:
+    await asyncio.sleep(1.4)
+    live = element("live-panel") or element("live-state")
+    if live is not None:
+        live.dataset.state = "listening"
+    set_text("live-state", "listening for your signal")
 
 
-for context_key, toggle_id in TOGGLE_ELEMENTS.items():
-    bind(toggle_id, "click", toggle_context(context_key))
-bind("hero-run", "click", start_scene)
-bind("run-scene", "click", start_scene)
+def render_candidate(result: dict) -> None:
+    detected = bool(result.get("detected", False))
+    confidence = float(result.get("confidence", 0.0) or 0.0)
+    distance = float(result.get("distance", 0.0) or 0.0)
+    threshold = float(result.get("threshold", 0.0) or 0.0)
+    latency = float(result.get("latency_ms", 0.0) or 0.0)
 
-render_decision()
-element("runtime").classList.add("runtime-ready")
-set_text("runtime-label", "ready to try")
-set_text("loading-note", "Ready. Try the scene below or change any detail yourself.")
-element("hero-run").disabled = False
-element("run-scene").disabled = False
-render_toggles()
+    set_text("live-confidence", f"{confidence:.0%}")
+    set_text("live-distance", f"{distance:.3f}")
+    set_text("live-threshold", f"{threshold:.3f}")
+    set_text("live-latency", f"{latency:.0f} ms")
+
+    live = element("live-panel") or element("live-state")
+    if detected:
+        if live is not None:
+            live.dataset.state = "match"
+        set_text("live-state", "personal signal detected")
+        append_event(result)
+        asyncio.create_task(clear_detection_pulse())
+    else:
+        if live is not None:
+            live.dataset.state = "unknown"
+        set_text("live-state", "unknown sound rejected")
+
+
+def on_audio_frame(frame) -> None:
+    global capture_chunks
+    if engine is None:
+        return
+    audio = frame_to_numpy(frame)
+    if audio.size == 0:
+        return
+
+    if mode in {"calibrating", "recording"}:
+        capture_chunks.append(audio)
+        return
+
+    if mode == "listening" and engine.ready:
+        result = engine.process(audio)
+        if result is not None:
+            render_candidate(dict(result))
+
+
+frame_proxy = create_proxy(on_audio_frame)
+proxies.append(frame_proxy)
+window.knockFrameProxy = frame_proxy
+
+
+async def collect_for(seconds: float, progress: bool = False) -> np.ndarray:
+    global capture_chunks, capture_started
+    capture_chunks = []
+    capture_started = time.monotonic()
+    while time.monotonic() - capture_started < seconds:
+        elapsed = time.monotonic() - capture_started
+        if progress:
+            set_progress(elapsed / seconds)
+        await asyncio.sleep(0.05)
+    if progress:
+        set_progress(1.0)
+    if not capture_chunks:
+        return np.zeros(0, dtype=np.float32)
+    return np.concatenate(capture_chunks)
+
+
+async def calibrate_room(profile_loaded: bool = False) -> None:
+    global mode
+    if engine is None:
+        return
+    mode = "calibrating"
+    set_disabled("record-example", True)
+    set_text("mic-state", "Stay quiet for a moment while KNOCK learns this room.")
+    set_text("trainer-instruction", "Calibrating the room noise. No audio leaves this page.")
+    audio = await collect_for(CALIBRATION_SECONDS, progress=True)
+    if audio.size:
+        engine.set_noise(audio)
+    set_progress(0.0)
+
+    if profile_loaded and engine.ready:
+        mode = "listening"
+        set_text("mic-state", "Microphone live. Your saved signal is ready.")
+    else:
+        mode = "training"
+        set_text("mic-state", "Room calibrated. Record the same signal three times.")
+    update_training_ui()
+    render_profile()
+
+
+def restore_profile() -> bool:
+    global example_count
+    if engine is None:
+        return False
+    raw = window.localStorage.getItem(PROFILE_KEY)
+    if not raw:
+        return False
+    try:
+        engine.load_profile(json.loads(str(raw)))
+        if not engine.ready:
+            return False
+        example_count = 3
+        for index in range(1, 4):
+            set_example_state(index, "recorded")
+        examples = element("examples")
+        if examples is not None:
+            examples.dataset.count = "3"
+        return True
+    except Exception:
+        window.localStorage.removeItem(PROFILE_KEY)
+        return False
+
+
+async def enable_microphone() -> None:
+    global engine, mode
+    set_disabled("enable-mic", True)
+    set_text("enable-mic", "requesting microphone")
+    set_text("mic-state", "Waiting for microphone permission.")
+    try:
+        sample_rate = int(await window.knockAudio.start())
+        engine = KnockEngine(sample_rate)
+        profile_loaded = restore_profile()
+        set_text("enable-mic", "microphone enabled")
+        mic_button = element("enable-mic")
+        if mic_button is not None:
+            mic_button.dataset.active = "true"
+        set_disabled("reset-profile", False)
+        await calibrate_room(profile_loaded)
+    except Exception as error:
+        mode = "error"
+        set_disabled("enable-mic", False)
+        set_text("enable-mic", "try microphone again")
+        set_text("mic-state", f"Microphone unavailable: {error}")
+
+
+def enable_handler(_event=None) -> None:
+    asyncio.create_task(enable_microphone())
+
+
+async def record_training_example() -> None:
+    global mode, example_count
+    if engine is None or mode != "training":
+        return
+
+    slot = min(3, example_count + 1)
+    mode = "recording"
+    set_example_state(slot, "recording")
+    set_disabled("record-example", True)
+    set_text("record-example", "recording now")
+    set_text("trainer-instruction", "Perform the complete signal once, then leave a short silence.")
+    audio = await collect_for(CAPTURE_SECONDS, progress=True)
+    set_progress(0.0)
+
+    result = dict(engine.add_example(audio))
+    if not result.get("ok", False):
+        set_example_state(slot, "empty")
+        set_text("trainer-instruction", str(result.get("reason", "No clear pattern found. Try again.")))
+        mode = "training"
+        update_training_ui()
+        return
+
+    example_count = int(result.get("example_count", example_count + 1))
+    set_example_state(slot, "recorded")
+    if engine.ready:
+        profile = engine.export_profile()
+        window.localStorage.setItem(PROFILE_KEY, json.dumps(profile))
+        mode = "listening"
+        render_profile()
+    else:
+        mode = "training"
+    update_training_ui()
+
+
+def record_handler(_event=None) -> None:
+    asyncio.create_task(record_training_example())
+
+
+async def reset_profile() -> None:
+    global example_count, mode
+    if engine is None:
+        return
+    window.localStorage.removeItem(PROFILE_KEY)
+    engine.reset()
+    example_count = 0
+    mode = "calibrating"
+    reset_example_cards()
+    set_text("persistence-note", "No learned profile is stored.")
+    target = element("event-log")
+    if target is not None:
+        target.replaceChildren()
+        empty = document.createElement("li")
+        empty.className = "empty-event"
+        empty.textContent = "Your matched sounds will appear here."
+        target.appendChild(empty)
+    await calibrate_room(False)
+
+
+def reset_handler(_event=None) -> None:
+    asyncio.create_task(reset_profile())
+
+
+bind("enable-mic", "click", enable_handler)
+bind("record-example", "click", record_handler)
+bind("reset-profile", "click", reset_handler)
+
+reset_example_cards()
+set_disabled("enable-mic", False)
+set_disabled("record-example", True)
+set_disabled("reset-profile", True)
+set_text("runtime-label", "Python ready")
+set_text("mic-state", "The model is ready. Enable your microphone to begin.")
+set_text("persistence-note", "Nothing is stored until you teach a signal.")
