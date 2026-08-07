@@ -15,7 +15,7 @@
       rel="stylesheet"
       href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&amp;display=swap"
     />
-    <link rel="stylesheet" href="./web/styles.css?v=knock-v3" />
+    <link rel="stylesheet" href="./web/styles.css?v=knock-v4" />
   </head>
   <body>
     <aside class="file-warning" id="file-warning" hidden>
@@ -50,10 +50,9 @@
           </h1>
           <div class="hero-bottom">
             <p class="hero-deck">
-              Give the microphone three examples of one short rhythm. A tiny
-              Python model builds a
-              sound profile, compares live audio against it, and emits an event
-              when your pattern returns. No transcription. No upload.
+              Give the microphone three examples of one short rhythm. KNOCK
+              learns its shape, listens for it, and marks the moment your
+              pattern returns. No transcription. No upload.
             </p>
             <div class="hero-action">
               <button class="mic-button" id="enable-mic" type="button" disabled>
@@ -77,10 +76,10 @@
         <header class="lab-intro">
           <div>
             <p class="kicker">The working loop</p>
-            <h2 id="lab-title">Make the sound.<br />Let Python learn its shape.</h2>
+            <h2 id="lab-title">Make the sound.<br />Let KNOCK learn its shape.</h2>
           </div>
           <p class="runtime-label" id="runtime-label" role="status" aria-live="polite">
-            loading local Python
+            preparing detector
           </p>
         </header>
 
@@ -218,8 +217,8 @@
           <p class="kicker">Small enough to inspect</p>
           <h2 id="technical-title">The whole loop,<br />without a black box.</h2>
           <p>
-            KNOCK learns a compact signature from the sound envelope. It does
-            not need words, identity, or a remote model to recognize the pattern.
+            KNOCK listens only for the rhythm you taught it and leaves
+            everything else alone.
           </p>
         </div>
 
@@ -252,12 +251,12 @@
     <footer class="site-footer">
       <p>KNOCK</p>
       <h2>Teach one sound.<br />Keep the audio close.</h2>
-      <a href="https://github.com/akshan-main/knock">read the Python <span aria-hidden="true">&#8599;</span></a>
+      <a href="https://github.com/akshan-main/knock">view source <span aria-hidden="true">&#8599;</span></a>
     </footer>
 
-    <noscript>KNOCK needs JavaScript to request microphone access and start local Python.</noscript>
+    <noscript>Open KNOCK in a modern browser with microphone access.</noscript>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-    <script type="module" src="./web/bootstrap.js?v=knock-v3"></script>
+    <script type="module" src="./web/bootstrap.js?v=knock-v4"></script>
   </body>
 </html>

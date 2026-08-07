@@ -1,5 +1,5 @@
 const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/";
-const BUILD_ID = "knock-v3";
+const BUILD_ID = "knock-v4";
 const PYTHON_FILES = ["__init__.py", "audio.py", "features.py", "learner.py", "detector.py"];
 
 const runtime = document.querySelector("#runtime");
@@ -156,7 +156,7 @@ function setupMotion() {
 }
 
 async function loadPython() {
-  setRuntime("loading", "loading local Python");
+  setRuntime("loading", "preparing detector");
   const { loadPyodide } = await import(`${PYODIDE_URL}pyodide.mjs`);
   const python = await loadPyodide({ indexURL: PYODIDE_URL });
   await python.loadPackage("numpy");
@@ -173,7 +173,7 @@ async function loadPython() {
   if (!adapter.ok) throw new Error("Could not load the browser adapter.");
   await python.runPythonAsync(await adapter.text());
   window.knockPython = python;
-  setRuntime("ready", "Python ready");
+  setRuntime("ready", "detector ready");
 }
 
 async function start() {
@@ -189,8 +189,8 @@ async function start() {
     await loadPython();
   } catch (error) {
     console.error(error);
-    setRuntime("error", "runtime unavailable");
-    if (micState) micState.textContent = "The local Python runtime did not start. Reload to try again.";
+    setRuntime("error", "detector unavailable");
+    if (micState) micState.textContent = "KNOCK did not start. Reload to try again.";
     if (enableButton) enableButton.disabled = true;
   }
 }
