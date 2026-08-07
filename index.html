@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f1eee7" />
+    <link rel="icon" href="data:," />
+    <meta
+      name="description"
+      content="MANNERS is a Python attention scheduler for a world full of intelligent objects."
+    />
+    <title>MANNERS — Attention scheduling for intelligent objects</title>
+    <link rel="stylesheet" href="./web/styles.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="wordmark" href="#top" aria-label="MANNERS home">
+        <span>era</span><i></i><b>MANNERS</b>
+      </a>
+      <div class="runtime" id="runtime" role="status">
+        <span></span> loading Python
+      </div>
+      <a
+        class="source-link"
+        href="https://github.com/akshan-main/era-manners/blob/main/manners/engine.py"
+      >view Python source <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">An attention scheduler for physical AI</p>
+          <h1>When every object can speak,<em>something decides who should.</em></h1>
+          <p class="lede">
+            Agents propose. MANNERS decides which proposal earns attention,
+            which physical object should express it—or whether the world
+            should stay quiet.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-button" id="hero-run" disabled>
+              watch the 12-second scene
+            </button>
+            <a href="#lab">inspect the live kernel</a>
+          </div>
+          <p class="loading-note" id="loading-note">
+            Starting CPython in your browser. No application server involved.
+          </p>
+        </div>
+        <div class="hero-field" aria-hidden="true">
+          <div class="attention-orbit orbit-one"></div>
+          <div class="attention-orbit orbit-two"></div>
+          <div class="attention-core"><span>1</span><small>attention<br />slot</small></div>
+          <span class="agent-dot dot-weather">weather</span>
+          <span class="agent-dot dot-calendar">calendar</span>
+          <span class="agent-dot dot-social">social</span>
+          <p>silence is a valid output</p>
+        </div>
+      </section>
+
+      <section class="lab" id="lab" data-route="silence" data-ready="false" aria-busy="true">
+        <div class="lab-header">
+          <div>
+            <p class="eyebrow">Live arbitration / repository Python</p>
+            <h2>Three agents. One human attention stream.</h2>
+          </div>
+          <button class="scene-button" id="run-scene" disabled>play scene</button>
+        </div>
+
+        <div class="context-bar">
+          <span>Current context</span>
+          <button id="toggle-doorway" aria-pressed="true" disabled>
+            <i></i>At doorway
+          </button>
+          <button id="toggle-hands" aria-pressed="true" disabled>
+            <i></i>Hands full
+          </button>
+          <button id="toggle-asleep" aria-pressed="true" disabled>
+            <i></i>Partner asleep
+          </button>
+          <button id="toggle-attention" aria-pressed="true" disabled>
+            <i></i>Attention open
+          </button>
+          <small>Change any fact. Python reruns immediately.</small>
+        </div>
+
+        <div class="scenario-grid">
+          <section class="proposal-column" aria-label="Agent proposals">
+            <div class="column-title"><span>agents propose</span><b>03 requests</b></div>
+            <article class="proposal" id="proposal-weather" data-outcome="waiting">
+              <div class="proposal-top"><span>Weather agent</span><b>0.78</b></div>
+              <h3>Rain starts in 12 minutes.</h3>
+              <p>Leaving context required</p>
+              <strong class="outcome" id="outcome-weather">WAITING</strong>
+            </article>
+            <article class="proposal" id="proposal-calendar" data-outcome="waiting">
+              <div class="proposal-top"><span>Calendar agent</span><b>0.62</b></div>
+              <h3>Design review begins in 25 minutes.</h3>
+              <p>Personal / work</p>
+              <strong class="outcome" id="outcome-calendar">WAITING</strong>
+            </article>
+            <article class="proposal" id="proposal-social" data-outcome="waiting">
+              <div class="proposal-top"><span>Social agent</span><b>0.16</b></div>
+              <h3>Maya sent three photos.</h3>
+              <p>Personal / non-urgent</p>
+              <strong class="outcome" id="outcome-social">WAITING</strong>
+            </article>
+          </section>
+
+          <section class="arbiter-column" aria-label="MANNERS arbiter">
+            <div class="path-entry path-a"></div>
+            <div class="path-entry path-b"></div>
+            <div class="path-entry path-c"></div>
+            <div class="kernel-node">
+              <span>Python<br />kernel</span>
+              <strong>M</strong>
+              <b>MANNERS</b>
+              <small>gate → score → route</small>
+            </div>
+            <div class="attention-budget"><span></span>budget 1 / 1</div>
+          </section>
+
+          <section class="object-column" aria-label="Available physical objects">
+            <div class="column-title"><span>objects expose capabilities</span><b>03 routes</b></div>
+            <article class="device" id="object-charm" data-selected="false">
+              <div class="device-visual charm-visual"><i></i><b></b></div>
+              <div><h3>Door charm</h3><p>doorway · quiet glow</p></div>
+              <span class="route-state" id="route-charm">waiting for kernel</span>
+            </article>
+            <article class="device" id="object-pin" data-selected="false">
+              <div class="device-visual pin-visual"><i></i><b></b></div>
+              <div><h3>Worn pin</h3><p>private · haptic</p></div>
+              <span class="route-state" id="route-pin">waiting for kernel</span>
+            </article>
+            <article class="device" id="object-speaker" data-selected="false">
+              <div class="device-visual speaker-visual"><i></i><b></b></div>
+              <div><h3>Hall speaker</h3><p>public · speech</p></div>
+              <span class="route-state" id="route-speaker">waiting for kernel</span>
+            </article>
+          </section>
+
+          <aside class="receipt" aria-live="polite">
+            <div class="receipt-top"><span>decision receipt</span><b id="decision-kind">STARTING</b></div>
+            <p class="receipt-agent" id="decision-agent">LOADING REPOSITORY KERNEL</p>
+            <h3 id="decision-cue">Waiting for Python.</h3>
+            <p class="receipt-reason" id="decision-reason">
+              No decision is shown until the repository engine has executed.
+            </p>
+            <div class="receipt-score">
+              <span>contextual value</span><strong id="decision-score">0.000</strong>
+              <div><i id="score-fill"></i><b></b></div>
+              <small>act threshold 0.58</small>
+            </div>
+            <dl class="breakdown" id="score-breakdown"></dl>
+          </aside>
+        </div>
+
+        <details class="trace-panel" id="trace-panel">
+          <summary>
+            <span>Inspect the decision</span>
+            <small>content-free policy trace</small>
+          </summary>
+          <div class="trace-body">
+            <div>
+              <h3>Why this?</h3>
+              <ul id="decision-facts"></ul>
+            </div>
+            <div>
+              <h3>Why not the others?</h3>
+              <ul id="rejection-facts"></ul>
+            </div>
+            <pre id="raw-trace"></pre>
+          </div>
+        </details>
+      </section>
+
+      <section class="thesis">
+        <p class="eyebrow">The system-call boundary</p>
+        <h2>Objects call <code>propose()</code>,<br />never <code>speak()</code>.</h2>
+        <p>
+          Traditional operating systems schedule scarce compute. A physical AI
+          OS must also schedule something scarcer: a person’s attention.
+        </p>
+        <div class="thesis-grid">
+          <article><span>Gate</span><h3>Privacy before ranking.</h3><p>Identity, context, capability, audience, and expiry are hard constraints.</p></article>
+          <article><span>Score</span><h3>Value minus interruption.</h3><p>Urgency and relevance compete with route fit, modality, and social cost.</p></article>
+          <article><span>Route</span><h3>The object is part of the answer.</h3><p>A glow, haptic, or voice is selected only after a proposal earns attention.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div><strong>MANNERS</strong><span>Built for the Era AI Engineer prompt.</span></div>
+      <a href="https://github.com/akshan-main/era-manners#readme">read the engineering notes <span aria-hidden="true">↗</span></a>
+    </footer>
+
+    <noscript>This demo needs JavaScript to start the in-browser Python runtime.</noscript>
+    <script type="module" src="./web/bootstrap.js"></script>
+  </body>
+</html>
