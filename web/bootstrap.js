@@ -1,5 +1,5 @@
 const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/";
-const BUILD_ID = "knock-v4";
+const BUILD_ID = "knock-v5";
 const PYTHON_FILES = ["__init__.py", "audio.py", "features.py", "learner.py", "detector.py"];
 
 const runtime = document.querySelector("#runtime");

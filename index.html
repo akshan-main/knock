@@ -35,7 +35,7 @@
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="kicker">A personal sound detector, trained in this tab</p>
+          <p class="kicker">A private shortcut made from sound</p>
           <h1 id="hero-title">
             <span>TEACH A DETECTOR</span>
             <span>
@@ -68,14 +68,14 @@
           <div class="signal-disc">
             <i></i><i></i><i></i><i></i><i></i>
           </div>
-          <p>sound in<br />event out</p>
+          <p>sound in<br />match found</p>
         </div>
       </section>
 
       <section class="microphone-lab" id="lab" aria-labelledby="lab-title">
         <header class="lab-intro">
           <div>
-            <p class="kicker">The working loop</p>
+            <p class="kicker">Try it live</p>
             <h2 id="lab-title">Make the sound.<br />Let KNOCK learn its shape.</h2>
           </div>
           <p class="runtime-label" id="runtime-label" role="status" aria-live="polite">
@@ -88,7 +88,7 @@
             <header class="panel-heading">
               <div>
                 <p>Train</p>
-                <h3>Three examples<br />become one profile.</h3>
+                <h3>Three examples<br />teach one rhythm.</h3>
               </div>
               <span>three takes</span>
             </header>
@@ -136,12 +136,12 @@
                 record example
               </button>
               <button class="reset-button" id="reset-profile" type="button" disabled>
-                reset profile
+                start over
               </button>
             </div>
 
             <p class="persistence-note" id="persistence-note">
-              Only the learned profile can stay in this browser. Reset removes it.
+              KNOCK can remember the pattern here. It never saves the recording.
             </p>
           </article>
 
@@ -149,7 +149,7 @@
             <header class="panel-heading detector-heading">
               <div>
                 <p>Listen</p>
-                <h3>Live distance<br />from your sound.</h3>
+                <h3>Is that<br />your rhythm?</h3>
               </div>
               <span class="live-state" id="live-state" data-state="idle">not listening</span>
             </header>
@@ -171,22 +171,22 @@
                 <dd id="live-confidence">—</dd>
               </div>
               <div>
-                <dt>distance</dt>
+                <dt>difference</dt>
                 <dd id="live-distance">—</dd>
               </div>
               <div>
-                <dt>threshold</dt>
+                <dt>tolerance</dt>
                 <dd id="live-threshold">—</dd>
               </div>
               <div>
-                <dt>latency</dt>
+                <dt>response</dt>
                 <dd id="live-latency">—</dd>
               </div>
             </dl>
 
             <div class="event-section">
               <div class="event-title">
-                <span>detected events</span>
+                <span>recent matches</span>
                 <small>newest first</small>
               </div>
               <ol class="event-log" id="event-log" aria-live="polite">
@@ -201,21 +201,21 @@
         <div class="marquee-track">
           <span>LOCAL AUDIO ONLY</span><i></i>
           <span>THREE EXAMPLES</span><i></i>
-          <span>DISTANCE, NOT TRANSCRIPTION</span><i></i>
-          <span>ONE MATCH EVENT</span><i></i>
+          <span>RHYTHM, NOT WORDS</span><i></i>
+          <span>ONE SIGNAL AT A TIME</span><i></i>
           <span>NO AUDIO UPLOAD</span><i></i>
           <span aria-hidden="true">LOCAL AUDIO ONLY</span><i aria-hidden="true"></i>
           <span aria-hidden="true">THREE EXAMPLES</span><i aria-hidden="true"></i>
-          <span aria-hidden="true">DISTANCE, NOT TRANSCRIPTION</span><i aria-hidden="true"></i>
-          <span aria-hidden="true">ONE MATCH EVENT</span><i aria-hidden="true"></i>
+          <span aria-hidden="true">RHYTHM, NOT WORDS</span><i aria-hidden="true"></i>
+          <span aria-hidden="true">ONE SIGNAL AT A TIME</span><i aria-hidden="true"></i>
           <span aria-hidden="true">NO AUDIO UPLOAD</span><i aria-hidden="true"></i>
         </div>
       </section>
 
       <section class="technical" aria-labelledby="technical-title">
         <div class="technical-intro">
-          <p class="kicker">Small enough to inspect</p>
-          <h2 id="technical-title">The whole loop,<br />without a black box.</h2>
+          <p class="kicker">How it behaves</p>
+          <h2 id="technical-title">Teach it once.<br />Use it naturally.</h2>
           <p>
             KNOCK listens only for the rhythm you taught it and leaves
             everything else alone.
@@ -224,24 +224,24 @@
 
         <div class="technical-accordions" id="technical-accordions">
           <details open>
-            <summary><span>Learn</span><b aria-hidden="true">+</b></summary>
+            <summary><span>Teach</span><b aria-hidden="true">+</b></summary>
             <div>
-              <h3>Extract the rhythm behind each take.</h3>
-              <p>Each example becomes onset count, tempo-normalized intervals, relative hit strength, and compact spectral shape.</p>
+              <h3>Repeat one short rhythm three times.</h3>
+              <p>KNOCK remembers the spacing and character shared by your three examples.</p>
             </div>
           </details>
           <details>
-            <summary><span>Compare</span><b aria-hidden="true">+</b></summary>
+            <summary><span>Listen</span><b aria-hidden="true">+</b></summary>
             <div>
-              <h3>Measure shape, not meaning.</h3>
-              <p>Dynamic-time-warped feature distance compares a live motif with the two nearest learned examples.</p>
+              <h3>Make it faster, slower, louder, or softer.</h3>
+              <p>KNOCK listens for the same rhythm without expecting a perfectly identical replay.</p>
             </div>
           </details>
           <details>
-            <summary><span>Emit</span><b aria-hidden="true">+</b></summary>
+            <summary><span>Notice</span><b aria-hidden="true">+</b></summary>
             <div>
-              <h3>Cross the threshold once.</h3>
-              <p>A match produces a bounded event that another local behavior can consume without receiving raw audio.</p>
+              <h3>See each match once.</h3>
+              <p>After recognizing the complete rhythm, KNOCK waits before listening for the next one.</p>
             </div>
           </details>
         </div>
@@ -257,6 +257,6 @@
     <noscript>Open KNOCK in a modern browser with microphone access.</noscript>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-    <script type="module" src="./web/bootstrap.js?v=knock-v4"></script>
+    <script type="module" src="./web/bootstrap.js?v=knock-v5"></script>
   </body>
 </html>

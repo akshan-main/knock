@@ -98,12 +98,12 @@ def update_training_ui(message: str | None = None) -> None:
     if engine is not None and engine.ready:
         set_text(
             "trainer-instruction",
-            message or "Learned locally. Repeat your signal, then try to fool it with another sound.",
+            message or "Got it. Repeat your rhythm, then try to fool it with another sound.",
         )
-        set_text("record-example", "signal learned")
+        set_text("record-example", "rhythm learned")
         set_disabled("record-example", True)
-        set_text("live-state", "listening for your signal")
-        set_text("persistence-note", "The learned profile is saved in this browser. Raw audio is not stored.")
+        set_text("live-state", "listening for your rhythm")
+        set_text("persistence-note", "This browser remembers the pattern. It does not keep the recording.")
     else:
         next_number = min(3, example_count + 1)
         set_text(
@@ -112,7 +112,7 @@ def update_training_ui(message: str | None = None) -> None:
         )
         set_text("record-example", f"record example {next_number} of 3")
         set_disabled("record-example", mode not in {"training", "idle"})
-        set_text("live-state", "waiting for three examples")
+        set_text("live-state", "waiting for three takes")
 
 
 def render_profile() -> None:
@@ -137,7 +137,7 @@ def append_event(result: dict) -> None:
     moment = time.strftime("%H:%M:%S")
     name = document.createElement("span")
     score = document.createElement("strong")
-    name.textContent = f"{moment}  PersonalSignalDetected"
+    name.textContent = f"{moment}  rhythm matched"
     score.textContent = f"{result['confidence']:.0%}"
     item.appendChild(name)
     item.appendChild(score)
@@ -151,7 +151,7 @@ async def clear_detection_pulse() -> None:
     live = element("live-panel") or element("live-state")
     if live is not None:
         live.dataset.state = "listening"
-    set_text("live-state", "listening for your signal")
+    set_text("live-state", "listening for your rhythm")
 
 
 def render_candidate(result: dict) -> None:
@@ -170,7 +170,7 @@ def render_candidate(result: dict) -> None:
     if detected:
         if live is not None:
             live.dataset.state = "match"
-        set_text("live-state", "personal signal detected")
+        set_text("live-state", "rhythm matched")
         append_event(result)
         asyncio.create_task(clear_detection_pulse())
     else:
@@ -353,7 +353,7 @@ async def reset_profile() -> None:
     example_count = 0
     mode = "calibrating"
     reset_example_cards()
-    set_text("persistence-note", "No learned profile is stored.")
+    set_text("persistence-note", "No rhythm is remembered.")
     target = element("event-log")
     if target is not None:
         target.replaceChildren()
