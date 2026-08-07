@@ -90,13 +90,16 @@ def reset_example_cards() -> None:
         set_example_state(index, "empty")
 
 
-def update_training_ui() -> None:
+def update_training_ui(message: str | None = None) -> None:
     examples = element("examples")
     if examples is not None:
         examples.dataset.count = str(example_count)
 
     if engine is not None and engine.ready:
-        set_text("trainer-instruction", "Learned locally. Repeat your signal, then try to fool it with another sound.")
+        set_text(
+            "trainer-instruction",
+            message or "Learned locally. Repeat your signal, then try to fool it with another sound.",
+        )
         set_text("record-example", "signal learned")
         set_disabled("record-example", True)
         set_text("live-state", "listening for your signal")
@@ -105,7 +108,7 @@ def update_training_ui() -> None:
         next_number = min(3, example_count + 1)
         set_text(
             "trainer-instruction",
-            "Make the same short 2–6 hit knock, clap, or snap pattern inside each recording.",
+            message or "Make the same short 2–6 hit knock, clap, or snap pattern inside each recording.",
         )
         set_text("record-example", f"record example {next_number} of 3")
         set_disabled("record-example", mode not in {"training", "idle"})
@@ -297,16 +300,21 @@ async def record_training_example() -> None:
     set_example_state(slot, "recording")
     set_disabled("record-example", True)
     set_text("record-example", "recording now")
-    set_text("trainer-instruction", "Perform the complete signal once, then leave a short silence.")
-    audio = await collect_for(CAPTURE_SECONDS, progress=True)
+    set_text("trainer-instruction", "Perform the complete sound once, then leave a short silence.")
+    try:
+        audio = await collect_for(CAPTURE_SECONDS, progress=True)
+        result = dict(engine.add_example(audio))
+    except Exception:
+        set_example_state(slot, "empty")
+        mode = "training"
+        set_progress(0.0)
+        update_training_ui("That take could not be processed. The recorder is ready—try it again.")
+        return
     set_progress(0.0)
-
-    result = dict(engine.add_example(audio))
     if not result.get("ok", False):
         set_example_state(slot, "empty")
-        set_text("trainer-instruction", str(result.get("reason", "No clear pattern found. Try again.")))
         mode = "training"
-        update_training_ui()
+        update_training_ui(str(result.get("reason", "No clear pattern found. Try again.")))
         return
 
     example_count = int(result.get("example_count", example_count + 1))
@@ -318,7 +326,18 @@ async def record_training_example() -> None:
         render_profile()
     else:
         mode = "training"
-    update_training_ui()
+    if engine.ready:
+        consistency = float(result.get("consistency", 1.0) or 0.0)
+        if consistency < 0.35:
+            update_training_ui(
+                "All three examples are recorded, but they differ. Try the detector; reset if matches feel loose."
+            )
+        else:
+            update_training_ui()
+    else:
+        update_training_ui(
+            f"Example {example_count} learned. Click record for example {example_count + 1}."
+        )
 
 
 def record_handler(_event=None) -> None:

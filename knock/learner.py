@@ -61,14 +61,6 @@ class MotifLearner:
         if self.ready:
             return {"ok": False, "reason": "The profile already has three examples."}
 
-        if self.examples:
-            nearest = min(signature_distance(signature, known) for known in self.examples)
-            if nearest > 0.72:
-                return {
-                    "ok": False,
-                    "reason": "That recording differs too much from the earlier examples. Repeat the same pattern.",
-                }
-
         self.examples.append(signature)
         if len(self.examples) == 3:
             pairwise = [signature_distance(a, b) for a, b in combinations(self.examples, 2)]

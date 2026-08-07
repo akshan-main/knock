@@ -15,9 +15,13 @@
       rel="stylesheet"
       href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&amp;display=swap"
     />
-    <link rel="stylesheet" href="./web/styles.css?v=knock-v2" />
+    <link rel="stylesheet" href="./web/styles.css?v=knock-v3" />
   </head>
   <body>
+    <aside class="file-warning" id="file-warning" hidden>
+      This downloaded file cannot run microphone training.
+      <a href="https://akshan.dev/knock/">Open the secure live app ↗</a>
+    </aside>
     <header class="site-nav">
       <a class="plain-name" href="#top">KNOCK</a>
       <p>One sound. Learned locally.</p>
@@ -46,7 +50,8 @@
           </h1>
           <div class="hero-bottom">
             <p class="hero-deck">
-              Give the microphone three examples. A tiny Python model builds a
+              Give the microphone three examples of one short rhythm. A tiny
+              Python model builds a
               sound profile, compares live audio against it, and emits an event
               when your pattern returns. No transcription. No upload.
             </p>
@@ -253,6 +258,6 @@
     <noscript>KNOCK needs JavaScript to request microphone access and start local Python.</noscript>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-    <script type="module" src="./web/bootstrap.js?v=knock-v2"></script>
+    <script type="module" src="./web/bootstrap.js?v=knock-v3"></script>
   </body>
 </html>

@@ -1,13 +1,12 @@
-import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.mjs";
-
 const PYODIDE_URL = "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/";
-const BUILD_ID = "knock-v2";
+const BUILD_ID = "knock-v3";
 const PYTHON_FILES = ["__init__.py", "audio.py", "features.py", "learner.py", "detector.py"];
 
 const runtime = document.querySelector("#runtime");
 const runtimeLabel = document.querySelector("#runtime-label");
 const micState = document.querySelector("#mic-state");
 const enableButton = document.querySelector("#enable-mic");
+const fileWarning = document.querySelector("#file-warning");
 const canvas = document.querySelector("#waveform");
 const canvasContext = canvas?.getContext("2d");
 
@@ -158,6 +157,7 @@ function setupMotion() {
 
 async function loadPython() {
   setRuntime("loading", "loading local Python");
+  const { loadPyodide } = await import(`${PYODIDE_URL}pyodide.mjs`);
   const python = await loadPyodide({ indexURL: PYODIDE_URL });
   await python.loadPackage("numpy");
   python.FS.mkdirTree("/app/knock");
@@ -178,6 +178,13 @@ async function loadPython() {
 
 async function start() {
   setupMotion();
+  if (window.location.protocol === "file:") {
+    if (fileWarning) fileWarning.hidden = false;
+    setRuntime("error", "open the secure live site");
+    if (micState) micState.textContent = "Microphone training needs the HTTPS version linked above.";
+    if (enableButton) enableButton.disabled = true;
+    return;
+  }
   try {
     await loadPython();
   } catch (error) {
