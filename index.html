@@ -7,43 +7,40 @@
     <link rel="icon" href="data:," />
     <meta
       name="description"
-      content="MANNERS is a Python attention scheduler for a world full of intelligent objects."
+      content="When everything can interrupt you, MANNERS chooses what should—and how."
     />
-    <title>MANNERS — Attention scheduling for intelligent objects</title>
+    <title>MANNERS — Which object should interrupt?</title>
     <link rel="stylesheet" href="./web/styles.css" />
   </head>
   <body>
     <header class="nav">
       <a class="wordmark" href="#top" aria-label="MANNERS home">
-        <span>era</span><i></i><b>MANNERS</b>
+        <span aria-hidden="true">M</span><b>MANNERS</b>
       </a>
-      <div class="runtime" id="runtime" role="status">
-        <span></span> loading Python
-      </div>
       <a
         class="source-link"
         href="https://github.com/akshan-main/era-manners/blob/main/manners/engine.py"
-      >view Python source <span aria-hidden="true">↗</span></a>
+      >view source <span aria-hidden="true">↗</span></a>
     </header>
 
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">An attention scheduler for physical AI</p>
+          <p class="eyebrow">One quiet system for a room full of smart objects</p>
           <h1>When every object can speak,<em>something decides who should.</em></h1>
           <p class="lede">
-            Agents propose. MANNERS decides which proposal earns attention,
-            which physical object should express it—or whether the world
-            should stay quiet.
+            Weather, calendars, and assistants can all interrupt you. MANNERS
+            makes them ask first, then chooses the least disruptive way to
+            reach you—or stays silent.
           </p>
           <div class="hero-actions">
             <button class="primary-button" id="hero-run" disabled>
-              watch the 12-second scene
+              see it decide
             </button>
-            <a href="#lab">inspect the live kernel</a>
+            <a href="#lab">try the controls</a>
           </div>
           <p class="loading-note" id="loading-note">
-            Starting CPython in your browser. No application server involved.
+            Preparing the interactive example.
           </p>
         </div>
         <div class="hero-field" aria-hidden="true">
@@ -60,14 +57,19 @@
       <section class="lab" id="lab" data-route="silence" data-ready="false" aria-busy="true">
         <div class="lab-header">
           <div>
-            <p class="eyebrow">Live arbitration / repository Python</p>
-            <h2>Three agents. One human attention stream.</h2>
+            <p class="eyebrow">Try a real moment</p>
+            <h2>Three things want your attention. What should happen?</h2>
           </div>
-          <button class="scene-button" id="run-scene" disabled>play scene</button>
+          <div class="lab-actions">
+            <div class="runtime" id="runtime" role="status">
+              <span></span><b id="runtime-label">starting the demo</b>
+            </div>
+            <button class="scene-button" id="run-scene" disabled>run the example</button>
+          </div>
         </div>
 
         <div class="context-bar">
-          <span>Current context</span>
+          <span>Change the situation</span>
           <button id="toggle-doorway" aria-pressed="true" disabled>
             <i></i>At doorway
           </button>
@@ -78,91 +80,94 @@
             <i></i>Partner asleep
           </button>
           <button id="toggle-attention" aria-pressed="true" disabled>
-            <i></i>Attention open
+            <i></i>Attention available
           </button>
-          <small>Change any fact. Python reruns immediately.</small>
+          <small>Turn a detail on or off. The result updates instantly.</small>
         </div>
 
         <div class="scenario-grid">
-          <section class="proposal-column" aria-label="Agent proposals">
-            <div class="column-title"><span>agents propose</span><b>03 requests</b></div>
+          <section class="proposal-column" aria-label="Things asking for attention">
+            <div class="column-title"><span>what wants your attention</span><b>3 requests</b></div>
             <article class="proposal" id="proposal-weather" data-outcome="waiting">
-              <div class="proposal-top"><span>Weather agent</span><b>0.78</b></div>
+              <div class="proposal-top"><span>Weather</span><b>0.78</b></div>
               <h3>Rain starts in 12 minutes.</h3>
               <p>Leaving context required</p>
-              <strong class="outcome" id="outcome-weather">WAITING</strong>
+              <strong class="outcome" id="outcome-weather">STARTING</strong>
             </article>
             <article class="proposal" id="proposal-calendar" data-outcome="waiting">
-              <div class="proposal-top"><span>Calendar agent</span><b>0.62</b></div>
+              <div class="proposal-top"><span>Calendar</span><b>0.62</b></div>
               <h3>Design review begins in 25 minutes.</h3>
               <p>Personal / work</p>
-              <strong class="outcome" id="outcome-calendar">WAITING</strong>
+              <strong class="outcome" id="outcome-calendar">STARTING</strong>
             </article>
             <article class="proposal" id="proposal-social" data-outcome="waiting">
-              <div class="proposal-top"><span>Social agent</span><b>0.16</b></div>
+              <div class="proposal-top"><span>Messages</span><b>0.16</b></div>
               <h3>Maya sent three photos.</h3>
               <p>Personal / non-urgent</p>
-              <strong class="outcome" id="outcome-social">WAITING</strong>
+              <strong class="outcome" id="outcome-social">STARTING</strong>
             </article>
           </section>
 
-          <section class="arbiter-column" aria-label="MANNERS arbiter">
+          <section class="arbiter-column" aria-label="How MANNERS chooses">
             <div class="path-entry path-a"></div>
             <div class="path-entry path-b"></div>
             <div class="path-entry path-c"></div>
             <div class="kernel-node">
-              <span>Python<br />kernel</span>
+              <span>compares<br />all three</span>
               <strong>M</strong>
               <b>MANNERS</b>
-              <small>gate → score → route</small>
+              <small>check → compare → choose</small>
             </div>
-            <div class="attention-budget"><span></span>budget 1 / 1</div>
+            <div class="attention-budget" id="attention-budget" data-open="true">
+              <span></span><b id="attention-budget-label">one interruption allowed</b>
+            </div>
           </section>
 
           <section class="object-column" aria-label="Available physical objects">
-            <div class="column-title"><span>objects expose capabilities</span><b>03 routes</b></div>
+            <div class="column-title"><span>where it can happen</span><b>3 nearby objects</b></div>
             <article class="device" id="object-charm" data-selected="false">
               <div class="device-visual charm-visual"><i></i><b></b></div>
               <div><h3>Door charm</h3><p>doorway · quiet glow</p></div>
-              <span class="route-state" id="route-charm">waiting for kernel</span>
+              <span class="route-state" id="route-charm">starting</span>
             </article>
             <article class="device" id="object-pin" data-selected="false">
               <div class="device-visual pin-visual"><i></i><b></b></div>
               <div><h3>Worn pin</h3><p>private · haptic</p></div>
-              <span class="route-state" id="route-pin">waiting for kernel</span>
+              <span class="route-state" id="route-pin">starting</span>
             </article>
             <article class="device" id="object-speaker" data-selected="false">
               <div class="device-visual speaker-visual"><i></i><b></b></div>
               <div><h3>Hall speaker</h3><p>public · speech</p></div>
-              <span class="route-state" id="route-speaker">waiting for kernel</span>
+              <span class="route-state" id="route-speaker">starting</span>
             </article>
           </section>
 
           <aside class="receipt" aria-live="polite">
-            <div class="receipt-top"><span>decision receipt</span><b id="decision-kind">STARTING</b></div>
-            <p class="receipt-agent" id="decision-agent">LOADING REPOSITORY KERNEL</p>
-            <h3 id="decision-cue">Waiting for Python.</h3>
+            <div class="receipt-top"><span>What happens now</span><b id="decision-kind">STARTING</b></div>
+            <p class="receipt-agent" id="decision-agent">PREPARING THE EXAMPLE</p>
+            <h3 id="decision-cue">One moment.</h3>
             <p class="receipt-reason" id="decision-reason">
-              No decision is shown until the repository engine has executed.
+              The result will appear when the interactive example is ready.
             </p>
-            <div class="receipt-score">
-              <span>contextual value</span><strong id="decision-score">0.000</strong>
-              <div><i id="score-fill"></i><b></b></div>
-              <small>act threshold 0.58</small>
-            </div>
-            <dl class="breakdown" id="score-breakdown"></dl>
+            <p class="quiet-note" id="quiet-note">The other objects stay quiet.</p>
           </aside>
         </div>
 
         <details class="trace-panel" id="trace-panel">
           <summary>
-            <span>Inspect the decision</span>
-            <small>content-free policy trace</small>
+            <span>See why it chose this</span>
+            <small>scores and rules</small>
           </summary>
           <div class="trace-body">
             <div>
               <h3>Why this?</h3>
               <ul id="decision-facts"></ul>
+              <div class="receipt-score trace-score">
+                <span>match for this moment</span><strong id="decision-score">0.000</strong>
+                <div><i id="score-fill"></i><b></b></div>
+                <small>minimum to respond 0.58</small>
+              </div>
+              <dl class="breakdown" id="score-breakdown"></dl>
             </div>
             <div>
               <h3>Why not the others?</h3>
@@ -174,23 +179,23 @@
       </section>
 
       <section class="thesis">
-        <p class="eyebrow">The system-call boundary</p>
-        <h2>Objects call <code>propose()</code>,<br />never <code>speak()</code>.</h2>
+        <p class="eyebrow">The rule behind it</p>
+        <h2>Every object asks.<br />One system answers.</h2>
         <p>
-          Traditional operating systems schedule scarce compute. A physical AI
-          OS must also schedule something scarcer: a person’s attention.
+          Without a shared decision, every smart object becomes another
+          notification. MANNERS gives the whole room one set of manners.
         </p>
         <div class="thesis-grid">
-          <article><span>Gate</span><h3>Privacy before ranking.</h3><p>Identity, context, capability, audience, and expiry are hard constraints.</p></article>
-          <article><span>Score</span><h3>Value minus interruption.</h3><p>Urgency and relevance compete with route fit, modality, and social cost.</p></article>
-          <article><span>Route</span><h3>The object is part of the answer.</h3><p>A glow, haptic, or voice is selected only after a proposal earns attention.</p></article>
+          <article><span>Respect</span><h3>Read the room first.</h3><p>Who is present, what is private, and whether this is a good moment come before urgency.</p></article>
+          <article><span>Choose</span><h3>Use the gentlest object.</h3><p>A quiet glow, a private tap, or speech is chosen to fit the moment.</p></article>
+          <article><span>Wait</span><h3>Silence is useful.</h3><p>If nothing deserves attention—or attention is unavailable—nothing interrupts.</p></article>
         </div>
       </section>
     </main>
 
     <footer>
-      <div><strong>MANNERS</strong><span>Built for the Era AI Engineer prompt.</span></div>
-      <a href="https://github.com/akshan-main/era-manners#readme">read the engineering notes <span aria-hidden="true">↗</span></a>
+      <div><strong>MANNERS</strong><span>A small experiment in quieter intelligence.</span></div>
+      <a href="https://github.com/akshan-main/era-manners#readme">view code and technical notes <span aria-hidden="true">↗</span></a>
     </footer>
 
     <noscript>This demo needs JavaScript to start the in-browser Python runtime.</noscript>

@@ -1,12 +1,13 @@
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/pyodide.mjs";
 
 const runtime = document.querySelector("#runtime");
+const runtimeLabel = document.querySelector("#runtime-label");
 const loadingNote = document.querySelector("#loading-note");
 const indexURL = "https://cdn.jsdelivr.net/pyodide/v0.29.4/full/";
 
 async function start() {
   try {
-    runtime.lastChild.textContent = " starting CPython";
+    runtimeLabel.textContent = "starting the demo";
     const python = await loadPyodide({ indexURL });
     python.FS.mkdirTree("/app/manners");
 
@@ -23,15 +24,15 @@ async function start() {
     globalThis.mannersPython = python;
   } catch (error) {
     runtime.classList.add("runtime-error");
-    runtime.lastChild.textContent = " Python failed to start";
+    runtimeLabel.textContent = "demo unavailable";
     loadingNote.textContent = `${error}. Reload to try again.`;
     const lab = document.querySelector("#lab");
     lab.dataset.ready = "error";
     lab.setAttribute("aria-busy", "false");
     document.querySelector("#decision-kind").textContent = "UNAVAILABLE";
-    document.querySelector("#decision-agent").textContent = "PYTHON DID NOT START";
-    document.querySelector("#decision-cue").textContent = "No simulated decision.";
-    document.querySelector("#decision-reason").textContent = "Reload to retry the local runtime.";
+    document.querySelector("#decision-agent").textContent = "THE EXAMPLE DID NOT START";
+    document.querySelector("#decision-cue").textContent = "Nothing is being simulated.";
+    document.querySelector("#decision-reason").textContent = "Reload the page to try again.";
     console.error(error);
   }
 }

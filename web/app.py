@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import sys
 from datetime import datetime, timezone
 
 from js import document
@@ -28,9 +27,9 @@ automatic = False
 proxies = []
 
 PROPOSAL_NAMES = {
-    "weather": "Weather agent",
-    "calendar": "Calendar agent",
-    "social": "Social agent",
+    "weather": "Weather",
+    "calendar": "Calendar",
+    "social": "Social",
 }
 DEVICE_NAMES = {
     "door_charm": "Door charm",
@@ -53,14 +52,16 @@ TOGGLE_ELEMENTS = {
     "partner_asleep": "toggle-asleep",
     "attention_open": "toggle-attention",
 }
-OUTCOME_LABELS = {"act": "ACT NOW", "defer": "HELD", "drop": "SILENT"}
+OUTCOME_LABELS = {"act": "CHOSEN", "defer": "WAIT", "drop": "SKIP"}
 REASON_LABELS = {
-    "QUIET_HOME_CONSTRAINT": "too loud while partner sleeps",
-    "AUDIENCE_TOO_WIDE": "audience wider than proposal privacy",
-    "MODALITY_NOT_ALLOWED": "proposal forbids this modality",
-    "REQUIRED_CONTEXT_MISSING": "required doorway context is absent",
-    "BELOW_ACTION_THRESHOLD": "not valuable enough to interrupt",
-    "HIGHER_VALUE_PROPOSAL_WON": "attention already claimed",
+    "QUIET_HOME_CONSTRAINT": "would wake your partner",
+    "AUDIENCE_TOO_WIDE": "would share personal information aloud",
+    "MODALITY_NOT_ALLOWED": "cannot carry this kind of message",
+    "REQUIRED_CONTEXT_MISSING": "only matters while you are leaving",
+    "BELOW_ACTION_THRESHOLD": "not important enough right now",
+    "HIGHER_VALUE_PROPOSAL_WON": "another message is more useful right now",
+    "HIGHEST_CONTEXTUAL_VALUE": "best fit for this moment",
+    "ATTENTION_BUDGET_CLOSED": "attention is unavailable",
 }
 
 
@@ -101,6 +102,12 @@ def render_toggles():
         target = element(element_id)
         target.setAttribute("aria-pressed", str(state[key]).lower())
         target.disabled = automatic
+    budget = element("attention-budget")
+    budget.dataset.open = str(state["attention_open"]).lower()
+    set_text(
+        "attention-budget-label",
+        "one interruption allowed" if state["attention_open"] else "no interruptions allowed",
+    )
 
 
 def render_outcomes(decision):
@@ -112,15 +119,15 @@ def render_outcomes(decision):
 
 def route_statuses(decision):
     if decision.proposal_id is None:
-        return {device.id: "attention unavailable" for device in DEVICES}
-    result = {device.id: "lower contextual score" for device in DEVICES}
+        return {device.id: "waiting" for device in DEVICES}
+    result = {device.id: "not chosen" for device in DEVICES}
     for rejection in decision.rejected_routes:
         if rejection.proposal_id != decision.proposal_id:
             continue
         label = REASON_LABELS.get(rejection.reason_code, rejection.reason_code.lower().replace("_", " "))
         result[rejection.device_id] = label
     if decision.device_id:
-        result[decision.device_id] = "selected"
+        result[decision.device_id] = "will respond"
     return result
 
 
@@ -176,9 +183,9 @@ def render_trace(decision):
     if decision.proposal_id:
         for device in DEVICES:
             if device.id != decision.device_id and device.id not in rejected_devices:
-                rejection_facts.append(f"{device.name}: legal route, but lower contextual score.")
+                rejection_facts.append(f"{device.name}: it could work, but another object fits better.")
     elif not rejection_facts:
-        rejection_facts.append("Attention is unavailable, so no physical route was evaluated.")
+        rejection_facts.append("Attention is unavailable, so every object waits.")
 
     replace_list("decision-facts", outcome_facts)
     replace_list("rejection-facts", rejection_facts[:5])
@@ -204,8 +211,8 @@ def render_decision():
     if decision.kind is DecisionKind.ACT:
         proposal = PROPOSAL_NAMES[decision.proposal_id]
         device = DEVICE_NAMES[decision.device_id]
-        set_text("decision-kind", "ACT NOW")
-        set_text("decision-agent", f"{proposal.upper()} → {device.upper()}")
+        set_text("decision-kind", "ONE OBJECT RESPONDS")
+        set_text("decision-agent", f"{proposal.upper()} · {device.upper()}")
         if decision.modality == "glow":
             cue = "Two quiet blue pulses."
         elif decision.modality == "haptic":
@@ -213,12 +220,30 @@ def render_decision():
         else:
             cue = f'“{decision.cue}.”'
         set_text("decision-cue", cue)
+        if decision.proposal_id == "weather" and decision.device_id == "door_charm":
+            reason = (
+                "Rain matters as you leave. The door charm can remind you quietly "
+                "while your partner sleeps."
+            )
+        elif decision.proposal_id == "weather":
+            reason = "Your hands are full and the room is awake, so speech is the easiest option."
+        else:
+            reason = (
+                "The rain reminder no longer applies. Your calendar reminder moves "
+                "to the private pin you are wearing."
+            )
+        set_text("decision-reason", reason)
+        set_text("quiet-note", "The other objects stay quiet.")
     else:
-        set_text("decision-kind", "SILENCE")
-        set_text("decision-agent", "NO AGENT MAY ACT")
+        set_text("decision-kind", "NO INTERRUPTION")
+        set_text("decision-agent", "EVERY REQUEST WAITS")
         set_text("decision-cue", "The world stays quiet.")
+        set_text(
+            "decision-reason",
+            "Attention is unavailable, so nothing is allowed to interrupt you.",
+        )
+        set_text("quiet-note", "No object responds.")
 
-    set_text("decision-reason", decision.reason)
     set_text("decision-score", f"{decision.score:.3f}")
     element("score-fill").style.width = f"{decision.score * 100:.1f}%"
     return decision
@@ -281,8 +306,8 @@ bind("run-scene", "click", start_scene)
 
 render_decision()
 element("runtime").classList.add("runtime-ready")
-element("runtime").lastChild.textContent = f" CPython {sys.version.split()[0]} / kernel ready"
-set_text("loading-note", "Ready. Every result below is produced by manners/engine.py.")
+set_text("runtime-label", "ready to try")
+set_text("loading-note", "Ready. Try the scene below or change any detail yourself.")
 element("hero-run").disabled = False
 element("run-scene").disabled = False
 render_toggles()
